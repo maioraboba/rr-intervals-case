@@ -2,8 +2,6 @@ import os
 import csv
 import pandas as pd
 from scipy import stats
-from scipy.stats import kurtosis
-from scipy.stats import skew
 import numpy as np
 
 
@@ -35,20 +33,18 @@ class Creator:
         mean_squared_difference = squared_differences.mean()
         rms_difference = np.sqrt(mean_squared_difference)   # Среднеквадратичное различие
 
-        #   Процент последовательных интервалов NN, различающихся на 50 мс и более
-        count_above_threshold = (differences >= 0.05).sum()
-        total_intervals = len(differences)
-        if total_intervals > 0:
-            percentage = (count_above_threshold / total_intervals) * 100
-        else:
-            percentage = 0
+        # Расчет абсолютного прироста
+        absolute_growth = line.diff()
 
-        asymmetry_coefficient = skew(line)  # Коэффициент асимметрии
-        excess_kurtosis = kurtosis(line, fisher=True)   # Эксцесс
+        # Расчет темпа роста
+        growth_rate = absolute_growth / line.shift(1)
 
-        dct_stats = {"mode": mode, "mean": mean, "median": median, "std": std, "min": minimal, "max": maximum,
+        average_absolute_growth = absolute_growth.mean()
+        average_growth_rate = growth_rate.mean()
+
+        dct_stats = {"mode": mode, "mean": int(mean), "median": int(median), "std": int(std), "min": minimal, "max": maximum,
                      "trim_mean": trim_mean, "iqr": iqr, "mad": mad, "cv": coefficient_of_variation,
-                     "rms": rms_difference, "pci": percentage, "ac": asymmetry_coefficient, "ec": excess_kurtosis}
+                     "rms": rms_difference, "aag": average_absolute_growth, "agr": average_growth_rate}
 
         for i in self.stats:
             res.append(dct_stats[i])    # Берём из словаря только те значения, которые передали в параметры
@@ -66,7 +62,7 @@ class Creator:
         res = ["id"]
         for m in stats:
             for j in positions:
-                res.append(f"'{type_file}_{m}_{j}'")
+                res.append(f"{type_file}_{m}_{j}")
         res.append("patient")
         self.fields = res
         self.num_fields = len(res) - 2
@@ -101,7 +97,7 @@ class Creator:
 
                     if file_type == "rrg":
                         if file_name[-3:] == 'rrg':
-                            lines = pd.Series([float(line.strip()) for line in lines[2:-1] if float(line.strip())])
+                            lines = pd.Series([60 / float(line.strip()) for line in lines[2:-1] if float(line.strip())])
                             info = self.calculate_stats(lines)
                             if "СТОЯ" in name:
                                 for i in range(self.num_fields // 2):
@@ -130,8 +126,9 @@ class Creator:
 if __name__ == '__main__':
     creator = Creator()
 
-    creator.generate_fields(["mode", "max", "min", "mean", "cv", "rms", "pci", "ac", "ec"], "rrn")
-    creator.create_csv("rrn", "data_rrn_big_over")
+    # creator.generate_fields(["mode", "max", "min", "mean", "cv", "rms", "aag", "agr"], "rrn")
+    # creator.create_csv("rrn", "data_rrn_big_new")
 
-    # creator.generate_fields(["mean", "median", "std", "min", "max", "trim_mean", "iqr", "mad"], "rrg")
-    # creator.create_csv("rrg", "data_rrg_over_big")
+    creator.generate_fields(["mode", "mean", "median", "std", "min", "max", "trim_mean", "iqr", "mad", "cv",
+                             "rms"], "rrg")
+    creator.create_csv("rrg", "data_rrg_big")
