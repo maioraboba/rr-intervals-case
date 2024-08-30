@@ -7,7 +7,7 @@ creator = Creator()
 
 creator.generate_fields(["mode", "mean", "median", "std", "min", "max", "trim_mean", "iqr", "mad", "cv",
                          "rms"], "rrg")
-creator.create_csv("rrg", "data_rrg_big_xui")
+creator.create_csv("rrg", "data_rrg_big")
 
 clf = 'model_rr.pk'
 with open(clf, 'rb') as f:  # открытие обученной модели ML
