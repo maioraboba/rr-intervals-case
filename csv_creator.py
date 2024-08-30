@@ -76,7 +76,7 @@ class Creator:
 
     def save_data_to_csv(self, name_save):
         # Сохранить результат в новый CSV-файл
-        with open(f'banan/{name_save}.csv', 'w', newline='', encoding='utf-8') as file:
+        with open(f'{name_save}.csv', 'w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file, delimiter=',')
             writer.writerow(self.fields)
             writer.writerows(self.data)
